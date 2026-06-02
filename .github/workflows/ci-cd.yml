@@ -111,23 +111,18 @@ jobs:
           [ -z "$VERSION" ] && VERSION="latest"
           IMAGE=ghcr.io/${{ env.REPO_LOWER }}:$VERSION
           
-          # Запускаем новую версию (green) на порту 8081
           docker run -d --name app-green -p 8081:8080 $IMAGE
           sleep 5
           curl --retry 5 --retry-delay 2 --fail http://localhost:8081/health || exit 1
           
-          # Останавливаем старый blue (если есть)
           docker stop app-blue 2>/dev/null || true
           
-          # Запускаем новую версию на основном порту 8080
           docker run -d --name app-blue -p 8080:8080 $IMAGE
           sleep 3
           curl --fail http://localhost:8080/health || exit 1
           
-          # Удаляем вспомогательный green
           docker stop app-green && docker rm app-green
           
-          # Сохраняем текущую версию
           echo $VERSION > current_version.txt
       - name: Save production logs
         if: always()
